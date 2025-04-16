@@ -1,0 +1,88 @@
+﻿IF EXISTS (SELECT name FROM sys.databases WHERE name = N'DW')
+BEGIN
+    DROP DATABASE DW;
+END
+GO
+
+-- Tạo lại cơ sở dữ liệu
+CREATE DATABASE DW;
+GO
+
+USE DW;
+GO
+
+-- TAO DIMENSION
+
+CREATE TABLE DIM_VanPhong (
+    MaThanhPho INT IDENTITY(1,1) PRIMARY KEY,
+    TenThanhPho NVARCHAR(255) NOT NULL,
+    DiaChi NVARCHAR(255) NOT NULL,
+    Bang NVARCHAR(100) NOT NULL,
+    ThoiGian DATE DEFAULT GETDATE()
+);
+
+CREATE TABLE DIM_CuaHang (
+    MaCuaHang INT IDENTITY(1,1) PRIMARY KEY,
+    SoDienThoai VARCHAR(15) NOT NULL,
+    ThoiGian DATE DEFAULT GETDATE(),
+    MaThanhPho INT NOT NULL,
+    FOREIGN KEY (MaThanhPho) REFERENCES DIM_VanPhong(MaThanhPho)
+);
+
+CREATE TABLE DIM_MatHang (
+    MaMatHang INT IDENTITY(1,1) PRIMARY KEY,
+    MoTa NVARCHAR(255),
+    KichCo NVARCHAR(100),
+    TrongLuong FLOAT,
+    Gia FLOAT NOT NULL,
+    ThoiGian DATE DEFAULT GETDATE()
+);
+
+CREATE TABLE DIM_KhachHang (
+    MaKhachHang INT IDENTITY(1,1) PRIMARY KEY,
+    TenKhachHang NVARCHAR(255) NOT NULL,
+    NgayDatHangDauTien DATE,
+    MaThanhPho INT NOT NULL,
+    FOREIGN KEY (MaThanhPho) REFERENCES DIM_VanPhong(MaThanhPho)
+);
+CREATE TABLE DIM_KhachHangDuLich (
+    MaKhachHang INT PRIMARY KEY,
+    HuongDanVienDuLich NVARCHAR(255),
+    ThoiGian DATE DEFAULT GETDATE(),
+    FOREIGN KEY (MaKhachHang) REFERENCES DIM_KhachHang(MaKhachHang)
+);
+
+CREATE TABLE DIM_KhachHangBuuDien (
+    MaKhachHang INT PRIMARY KEY,
+    DiaChiBuuDien NVARCHAR(255),
+    ThoiGian DATE DEFAULT GETDATE(),
+    FOREIGN KEY (MaKhachHang) REFERENCES DIM_KhachHang(MaKhachHang)
+);
+
+CREATE TABLE DIM_ThoiGian (
+	MaThoiGian INT IDENTITY(1,1) PRIMARY KEY,
+	Thang NVARCHAR(255) NOT NULL,
+	Quy NVARCHAR(255) NOT NULL,
+	Nam NVARCHAR(255) NOT NULL,
+);
+
+CREATE TABLE FACT_DoanhThu (
+	MaMatHang INT NOT NULL,
+	MaKhachHang INT NOT NULL,
+	MaThoiGian INT NOT NULL,
+	DoanhThu FLOAT NOT NULL,
+	SoLuong FLOAT NOT NULL,
+	PRIMARY KEY( MaMatHang, MaKhachHang, MaThoiGian),
+	FOREIGN KEY( MaMatHang) REFERENCES DIM_MatHang(MaMatHang),
+	FOREIGN KEY (MaKhachHang) REFERENCES DIM_KhachHang(MaKhachHang),
+	FOREIGN KEY (MaThoiGian) REFERENCES DIM_ThoiGian(MaThoiGian)
+);
+
+CREATE TABLE FACT_DonHang (
+	MaKhachHang INT NOT NULL,
+	MaThoiGian INT NOT NULL,
+	SoLuongDon INT NOT NULL,
+	PRIMARY KEY( MaKhachHang, MaThoiGian),
+	FOREIGN KEY (MaKhachHang) REFERENCES DIM_KhachHang(MaKhachHang),
+	FOREIGN KEY (MaThoiGian) REFERENCES DIM_ThoiGian(MaThoiGian)
+);
